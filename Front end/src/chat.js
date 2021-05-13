@@ -9,19 +9,28 @@ const Chat = () => {
 
     console.log("socket :- ", socket);
 
-    useEffect(() => {
-        socket.on('get_message', (data) => {
-            const sData = JSON.parse(data.data);
-            let contactArray = data;
-            contactArray = contactArray.concat(sData);
-            console.log("Socket Data", sData);
-        });
-    }, [])
-
     const [leftData, setLeftData] = useState([]);
     const [rightData, setRightData] = useState([]);
     const [selectUserData, setSelectUserData] = useState({ id: 0, name: '' })
     const [writeMessageData, setWriteMessageData] = useState('');
+    const [addData, setAddedData] = useState(null);
+
+
+    useEffect(() => {
+        socket.on('get_message', (addData) => {
+            const sData = JSON.parse(addData);
+            setAddedData(sData.data);
+        });
+    }, [])
+
+    useEffect(() => {
+        if (addData && addData != null) {
+            let contactArray = rightData;
+            contactArray = contactArray.concat(addData);
+            console.log("contactArray :- ", contactArray);
+            setRightData(contactArray);
+        }
+    }, [addData])
 
     useEffect(() => {
         console.log(localStorage.getItem('login_user'));
@@ -49,11 +58,11 @@ const Chat = () => {
     const sendMessage = async () => {
         const passData = {
             "message": aes256.encrypt('ShVmYq3t6w9y$B&E)H@McQfTjWnZr4u7', writeMessageData),
-            "message_type":"text",
-            "user_id":localStorage.getItem('login_user'),
-            "is_deleted":"0"
+            "message_type": "text",
+            "user_id": localStorage.getItem('login_user'),
+            "is_deleted": "0"
         }
-        await axios.post("/usermessages/addEditUserMessages",passData);
+        await axios.post("/usermessages/addEditUserMessages", passData);
         const result = await axios.get(`/usermessages/getUserMessages/1/500`);
         setRightData(result.data.data);
         setWriteMessageData('');
@@ -110,7 +119,7 @@ const Chat = () => {
                             <div class="message-input">
                                 <div class="wrap">
                                     {console.log("writeMessageData :- ", writeMessageData)}
-                                    <input type="text" value={writeMessageData} placeholder="Write your message..." onChange={ (e) => writeMessage(e)} />
+                                    <input type="text" value={writeMessageData} placeholder="Write your message..." onChange={(e) => writeMessage(e)} />
                                     <i class="fa fa-paperclip attachment" aria-hidden="true"></i>
                                     <button class="submit" onClick={sendMessage}><i class="fa fa-paper-plane" aria-hidden="true"></i></button>
                                 </div>
